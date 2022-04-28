@@ -5,6 +5,7 @@ import typing
 from starlette.datastructures import Headers, MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+# This is a new line
 
 class GZipMiddleware:
     def __init__(
