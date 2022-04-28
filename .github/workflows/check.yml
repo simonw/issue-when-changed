@@ -39,7 +39,7 @@ jobs:
             });
             const issueNumber = issue.data.number;
             // Now commit and reference that issue
-            const commitMessage = `${FILE_NAME} updated, refs ${issueNumber}`;
+            const commitMessage = `${FILE_NAME} updated, refs #${issueNumber}`;
             await exec_(`git config user.name "Automated"`);
             await exec_(`git config user.email "actions@users.noreply.github.com"`);
             await exec_(`git add -A`);
