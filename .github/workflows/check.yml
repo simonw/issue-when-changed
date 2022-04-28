@@ -1,0 +1,44 @@
+name: Scrape Hacker News
+
+on:
+  push:
+  workflow_dispatch:
+  # schedule:
+  # - cron:  '17 * * * *'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/github-script@v6
+      env:
+        URL: https://static.simonwillison.net/static/2022/gzip.py
+        FILE_NAME: gzip.py
+      with:
+        script: |
+          const util = require('util');
+          const exec = util.promisify(require('child_process').exec);
+          const { URL, FILE_NAME } = process.env;
+          await exec(`curl -o ${FILE_NAME} ${URL}`);
+          const { stdout } = await exec(`git diff ${FILE_NAME}`);
+          if (stdout) {
+            const title = `${FILE_NAME} was updated`;
+            const body = `${URL} changed:` + "\n\n```diff\n" + stdout + "\n```";
+            // There was a diff
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+            });
+            const issueNumber = issue.data.number;
+            // Now commit and reference that issue
+            const commitMessage = `${FILE_NAME} updated, refs ${issueNumber}`;
+            await exec(`git config user.name "Automated"`);
+            await exec(`git config user.email "actions@users.noreply.github.com"`);
+            await exec(`git add -A`);
+            await exec(`git commit -m "${commitMessage}" || exit 0`);
+            await exec(`git pull --rebase`);
+            await exec(`git push`);
+          }
