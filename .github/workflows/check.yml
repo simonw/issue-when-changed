@@ -18,8 +18,11 @@ jobs:
       with:
         script: |
           const { URL, FILE_NAME } = process.env;
-          await exec.exec(`curl -o ${FILE_NAME} ${URL}`);
-          const { stdout } = await exec.exec(`git diff ${FILE_NAME}`);
+          const util = require('util');
+          // Because 'exec' variable name is already used:
+          const exec_ = util.promisify(require('child_process').exec);
+          await exec_(`curl -o ${FILE_NAME} ${URL}`);
+          const { stdout } = await exec_(`git diff ${FILE_NAME}`);
           if (stdout) {
             const title = `${FILE_NAME} was updated`;
             const body = `${URL} changed:` + "\n\n```diff\n" + stdout + "\n```";
@@ -33,10 +36,10 @@ jobs:
             const issueNumber = issue.data.number;
             // Now commit and reference that issue
             const commitMessage = `${FILE_NAME} updated, refs ${issueNumber}`;
-            await exec.exec(`git config user.name "Automated"`);
-            await exec.exec(`git config user.email "actions@users.noreply.github.com"`);
-            await exec.exec(`git add -A`);
-            await exec.exec(`git commit -m "${commitMessage}" || exit 0`);
-            await exec.exec(`git pull --rebase`);
-            await exec.exec(`git push`);
+            await exec_(`git config user.name "Automated"`);
+            await exec_(`git config user.email "actions@users.noreply.github.com"`);
+            await exec_(`git add -A`);
+            await exec_(`git commit -m "${commitMessage}" || exit 0`);
+            await exec_(`git pull --rebase`);
+            await exec_(`git push`);
           }
